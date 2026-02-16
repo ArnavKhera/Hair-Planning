@@ -3,34 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hair Washing Scheduler | Custom Logic</title>
+    <title>Hair Scheduler | Continuity AI</title>
     <style>
         :root {
             --primary: #6b4c9a;
             --bg: #fdfbf7;
             --text: #2d3436;
             --good-hair: #d4edda;
-            --bad-hair: #f8d7da;
             --planned-wash: #e1f5fe;
             --planned-border: #03a9f4;
             --warning: #fff3cd;
         }
 
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
         
         .dashboard-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
 
-        .weather-banner { background: linear-gradient(135deg, #6b4c9a 0%, #9b72cf 100%); color: white; border-radius: 12px; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        /* Weather Header */
+        .weather-banner { background: linear-gradient(135deg, #6b4c9a 0%, #9b72cf 100%); color: white; border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 
+        /* Calendar */
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .day-name { text-align: center; font-weight: bold; font-size: 0.8rem; color: #888; padding-bottom: 10px; text-transform: uppercase; }
-        .calendar-day { background: white; border: 1px solid #eee; border-radius: 8px; min-height: 100px; padding: 8px; cursor: pointer; position: relative; transition: 0.2s; }
-        .calendar-day:hover { border-color: var(--primary); transform: translateY(-2px); }
-        .date-num { font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; color: #999; }
-        .is-today { border: 2px solid var(--primary) !important; }
+        .day-name { text-align: center; font-weight: bold; font-size: 0.8rem; color: #888; text-transform: uppercase; padding-bottom: 5px; }
+        .calendar-day { background: white; border: 1px solid #eee; border-radius: 8px; min-height: 100px; padding: 8px; cursor: pointer; position: relative; }
+        .is-today { border: 2px solid var(--primary) !important; background: #f9f6ff; }
+        .date-num { font-weight: bold; font-size: 0.9rem; color: #999; margin-bottom: 5px; }
 
+        /* Statuses */
         .hair-status { font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; margin-bottom: 4px; font-weight: 700; text-align: center; }
         .status-ideal { background: var(--good-hair); color: #155724; }
         .status-frizz { background: var(--warning); color: #856404; }
@@ -38,19 +40,22 @@
         .status-planned { background: var(--planned-wash); color: #01579b; border: 1px dashed var(--planned-border); }
         .status-needs-wash { background: #f1f2f6; color: #a4b0be; }
 
-        .event-tag { font-size: 0.7rem; background: #2f3542; color: white; padding: 2px 5px; border-radius: 4px; margin-top: 3px; }
+        /* Events */
+        .event-tag { font-size: 0.7rem; background: #2f3542; color: white; padding: 2px 5px; border-radius: 4px; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .event-match { background: #2ecc71 !important; } 
         .event-clash { background: #e74c3c !important; } 
 
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
-        .btn { cursor: pointer; padding: 12px; border-radius: 8px; border: none; width: 100%; font-weight: bold; transition: 0.2s; margin-bottom: 10px; }
+        /* Inputs */
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 12px; font-size: 0.9rem; }
+        .btn { cursor: pointer; padding: 12px; border-radius: 8px; border: none; width: 100%; font-weight: bold; transition: 0.2s; margin-bottom: 10px; font-size: 0.9rem; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-smart { background: #00b894; color: white; border-bottom: 4px solid #008e72; }
-        
-        .slider-container { margin: 20px 0; }
-        .slider-label { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; }
-        input[type=range] { cursor: pointer; }
-        .help-text { font-size: 0.8rem; color: #666; margin-bottom: 10px; line-height: 1.3; }
+        .btn-smart:hover { background: #00cc99; }
+
+        /* Slider */
+        .slider-container { margin: 20px 0; background: #f8f9fa; padding: 15px; border-radius: 8px; }
+        .slider-label { display: flex; justify-content: space-between; font-weight: bold; font-size: 0.75rem; color: #666; margin-bottom: 8px; }
+        .help-text { font-size: 0.8rem; color: #666; line-height: 1.4; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -59,7 +64,7 @@
     <div class="weather-banner">
         <div>
             <h2 id="cityDisplay" style="margin:0">Loading Weather...</h2>
-            <div id="weatherDesc">Syncing with humidity sensors...</div>
+            <div id="weatherDesc">Adjusting for local dew points...</div>
         </div>
         <div id="weatherIcon" style="font-size: 2.5rem;">🌥</div>
     </div>
@@ -67,59 +72,57 @@
     <div class="dashboard-grid">
         <div class="main">
             <div class="card">
-                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2 style="margin:0" id="monthLabel">Month</h2>
-                    <div>
-                        <button onclick="changeMonth(-1)">&larr;</button>
-                        <button onclick="changeMonth(1)">&rarr;</button>
-                    </div>
+                <div class="calendar-header">
+                    <button class="btn" style="width:auto; margin:0;" onclick="changeMonth(-1)">&larr;</button>
+                    <h2 id="monthLabel" style="margin:0">Month</h2>
+                    <button class="btn" style="width:auto; margin:0;" onclick="changeMonth(1)">&rarr;</button>
                 </div>
                 <div class="calendar-grid" id="calendarGrid"></div>
             </div>
             
             <div class="card" style="border-top: 5px solid #00b894;">
-                <h3 style="margin-top:0">🧠 Maintenance AI Optimizer</h3>
+                <h3 style="margin-top:0">🧠 Continuity AI Optimizer</h3>
+                <p class="help-text">Set your "Bad Hair Tolerance" and the AI will chain wash days backward from your events to Today.</p>
                 
                 <div class="slider-container">
                     <div class="slider-label">
                         <span>Relaxed (High Tolerance)</span>
-                        <span>Perfectionist (Low Tolerance)</span>
+                        <span>Perfectionist</span>
                     </div>
-                    <input type="range" id="perfectionism" min="0" max="7" step="1" value="2" onchange="updatePerfectionismLabel()">
-                    <div id="perfectionismDesc" class="help-text" style="text-align: center; font-weight: bold; color: var(--primary); margin-top: 5px;">
-                        Tolerate up to 2 "bad hair" days.
+                    <input type="range" id="perfectionism" min="0" max="7" step="1" value="5" onchange="updatePerfectionismLabel()">
+                    <div id="perfectionismDesc" style="text-align: center; font-weight: bold; color: var(--primary); margin-top: 10px; font-size: 0.9rem;">
+                        Gap Tolerance: 2 Days
                     </div>
                 </div>
-
-                <p class="help-text">
-                    <b>Relaxed:</b> AI only schedules washes to hit your events.<br>
-                    <b>Perfectionist:</b> AI schedules back-to-back washes to ensure no "Wash Needed" days exist.
-                </p>
                 
-                <button class="btn btn-smart" onclick="runSmartAlign()">Generate Optimized Schedule</button>
+                <button class="btn btn-smart" onclick="runSmartAlign()">Optimize Entire Schedule</button>
             </div>
         </div>
 
         <div class="sidebar">
             <div class="card">
-                <h3>⚙️ Hair Specs</h3>
-                <label style="font-size:0.8rem; font-weight:bold;">City</label>
-                <input type="text" id="cityInput" onchange="fetchWeather()">
+                <h3>⚙️ Settings</h3>
+                <label style="font-size:0.8rem; font-weight:bold;">Your City</label>
+                <input type="text" id="cityInput" placeholder="e.g. London">
+                <button class="btn" style="background:#eee;" onclick="fetchWeather()">Update Weather</button>
                 
-                <label style="font-size:0.8rem; font-weight:bold;">Peak Day (Post-Wash)</label>
-                <input type="number" id="curlDelay" value="1" onchange="saveSettings()">
+                <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
                 
-                <label style="font-size:0.8rem; font-weight:bold;">Style Life (Days)</label>
-                <input type="number" id="styleDuration" value="3" onchange="saveSettings()">
+                <label style="font-size:0.8rem; font-weight:bold;">Peak Day (Days after wash)</label>
+                <input type="number" id="curlDelay" value="1" min="0">
                 
-                <button class="btn btn-primary" onclick="logWashToday()">🚿 Log Wash Today</button>
+                <label style="font-size:0.8rem; font-weight:bold;">Style Life (Days it looks good)</label>
+                <input type="number" id="styleDuration" value="3" min="1">
+                
+                <button class="btn btn-primary" onclick="logWashToday()">🚿 I Washed Hair Today</button>
+                <div id="lastWashInfo" style="font-size:0.75rem; text-align:center; color:#888;"></div>
             </div>
 
             <div class="card">
-                <h3>📅 Events</h3>
-                <input type="text" id="eventTitle" placeholder="Event Name">
+                <h3>📅 Add Event</h3>
+                <input type="text" id="eventTitle" placeholder="e.g. Wedding, Date Night">
                 <input type="date" id="eventDate">
-                <button class="btn btn-primary" onclick="addEvent()">Add Event</button>
+                <button class="btn btn-primary" onclick="addEvent()">Save to Schedule</button>
             </div>
         </div>
     </div>
@@ -139,26 +142,25 @@
     let viewDate = new Date();
 
     function init() {
-        const saved = localStorage.getItem('hairPerfectionPro');
+        const saved = localStorage.getItem('hairContinuityV3');
         if (saved) settings = JSON.parse(saved);
         
         document.getElementById('cityInput').value = settings.location;
         document.getElementById('curlDelay').value = settings.curlDelay;
         document.getElementById('styleDuration').value = settings.styleDuration;
         document.getElementById('perfectionism').value = 7 - settings.toleranceDays;
-        updatePerfectionismLabel();
         
+        updatePerfectionismLabel();
         fetchWeather();
     }
 
     function updatePerfectionismLabel() {
         const val = parseInt(document.getElementById('perfectionism').value);
-        // Inverse the slider: 7 on slider = 0 tolerance days. 0 on slider = 7 tolerance days.
         settings.toleranceDays = 7 - val;
         const desc = document.getElementById('perfectionismDesc');
-        if (settings.toleranceDays === 0) desc.innerText = "Perfectionist: 0 gap days allowed.";
+        if (settings.toleranceDays === 0) desc.innerText = "Perfectionist: No gap days allowed.";
         else if (settings.toleranceDays >= 7) desc.innerText = "Relaxed: Only wash for events.";
-        else desc.innerText = `Balanced: Tolerate up to ${settings.toleranceDays} gap days.`;
+        else desc.innerText = `Tolerance: ${settings.toleranceDays} "Bad Hair" days allowed.`;
         saveSettings();
     }
 
@@ -166,7 +168,7 @@
         settings.location = document.getElementById('cityInput').value;
         settings.curlDelay = parseInt(document.getElementById('curlDelay').value);
         settings.styleDuration = parseInt(document.getElementById('styleDuration').value);
-        localStorage.setItem('hairPerfectionPro', JSON.stringify(settings));
+        localStorage.setItem('hairContinuityV3', JSON.stringify(settings));
         render();
     }
 
@@ -217,64 +219,27 @@
         const todayStr = today.toISOString().split('T')[0];
         settings.plannedWashes = [];
 
-        // Identify the "Furthest Point" we care about
         const sortedEvents = [...settings.events].sort((a,b) => new Date(b.date) - new Date(a.date));
-        let furthestDate = sortedEvents.length > 0 ? new Date(sortedEvents[0].date) : new Date();
-        if (sortedEvents.length === 0) furthestDate.setDate(today.getDate() + 14);
-
-        // We work FORWARD from Today/Last Wash to fill the schedule based on events and tolerance
-        let currentWashPointer = settings.lastWashDate ? new Date(settings.lastWashDate) : new Date(today);
-        
-        // Loop until we cover the furthest event
-        let safetyCounter = 0;
-        let lastSimulatedWash = new Date(currentWashPointer);
-
-        while (lastSimulatedWash <= furthestDate && safetyCounter < 50) {
-            safetyCounter++;
-            
-            // 1. How long does this wash last?
-            let currentLife = settings.styleDuration + settings.curlDelay;
-            let expirationDate = new Date(lastSimulatedWash);
-            expirationDate.setDate(lastSimulatedWash.getDate() + currentLife);
-
-            // 2. Is there an event coming up that we will miss?
-            let nextEvent = settings.events
-                .map(e => new Date(e.date))
-                .filter(d => d > lastSimulatedWash)
-                .sort((a,b) => a - b)[0];
-
-            // 3. Decide when the next wash happens
-            let nextWash = new Date(expirationDate);
-            
-            if (nextEvent) {
-                // If an event happens after this style expires, but before our "Tolerance" runs out
-                let toleranceDeadline = new Date(expirationDate);
-                toleranceDeadline.setDate(expirationDate.getDate() + settings.toleranceDays);
-
-                if (nextEvent <= toleranceDeadline) {
-                    // We can wait and wash specifically for this event
-                    nextWash = new Date(nextEvent);
-                    nextWash.setDate(nextEvent.getDate() - settings.curlDelay);
-                } else if (settings.toleranceDays >= 7) {
-                    // Relaxed mode: Don't wash until the next event requires it
-                    nextWash = new Date(nextEvent);
-                    nextWash.setDate(nextEvent.getDate() - settings.curlDelay);
-                }
-                // Perfectionist mode (Tolerance 0) will just use the expirationDate as nextWash
-            }
-
-            if (nextWash <= lastSimulatedWash) {
-                nextWash = new Date(lastSimulatedWash);
-                nextWash.setDate(lastSimulatedWash.getDate() + 1);
-            }
-
-            let nextWashStr = nextWash.toISOString().split('T')[0];
-            if (nextWashStr >= todayStr) {
-                settings.plannedWashes.push(nextWashStr);
-            }
-            lastSimulatedWash = new Date(nextWash);
+        if (sortedEvents.length === 0 && settings.toleranceDays > 0) {
+            alert("Add an event first, or set perfectionism to '0' to see a continuous cycle.");
+            return;
         }
-        
+
+        let targetDate = sortedEvents.length > 0 ? new Date(sortedEvents[0].date) : new Date();
+        if (sortedEvents.length === 0) targetDate.setDate(today.getDate() + 14);
+
+        // Recursive Back-Calculation
+        let currentPointer = new Date(targetDate);
+        currentPointer.setDate(currentPointer.getDate() - settings.curlDelay); // First wash needed
+
+        while (currentPointer >= today) {
+            let pStr = currentPointer.toISOString().split('T')[0];
+            if (!settings.plannedWashes.includes(pStr)) settings.plannedWashes.push(pStr);
+
+            // Move pointer back based on Style Life + Tolerance
+            let jumpBack = settings.styleDuration + settings.curlDelay + settings.toleranceDays;
+            currentPointer.setDate(currentPointer.getDate() - jumpBack);
+        }
         render();
     }
 
@@ -331,7 +296,7 @@
 
     function logWashToday() {
         settings.lastWashDate = new Date().toISOString().split('T')[0];
-        render();
+        saveSettings();
     }
 
     function addEvent() {
@@ -340,6 +305,8 @@
         if(title && date) {
             settings.events.push({title, date});
             saveSettings();
+            document.getElementById('eventTitle').value = '';
+            document.getElementById('eventDate').value = '';
         }
     }
 
